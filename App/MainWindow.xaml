@@ -1,0 +1,630 @@
+<winex:WindowEx
+    x:Class="FrameCastStudio.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:winex="using:WinUIEx"
+    xmlns:cap="using:FrameCastStudio.Core.Capture"
+    xmlns:aud="using:FrameCastStudio.Core.Audio"
+    xmlns:local="using:FrameCastStudio.App"
+    Title="FrameCast Studio" Width="1320" Height="860" MinWidth="900" MinHeight="600">
+    <Window.SystemBackdrop><MicaBackdrop Kind="BaseAlt"/></Window.SystemBackdrop>
+    <Grid RequestedTheme="Dark">
+        <Grid.Resources>
+            <Style x:Key="CardStyle" TargetType="Border">
+                <Setter Property="Padding" Value="16"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}"/>
+            </Style>
+            <Style x:Key="SectionTitle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="18"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Margin" Value="0,4,0,4"/>
+            </Style>
+        </Grid.Resources>
+        <NavigationView x:Name="NavView" PaneDisplayMode="Left" IsBackButtonVisible="Collapsed"
+                         IsSettingsVisible="False" OpenPaneLength="220"
+                         SelectionChanged="NavView_SelectionChanged">
+            <NavigationView.PaneHeader>
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="12,6,12,6">
+                    <Border Width="28" Height="28" CornerRadius="6" Background="#F4F4F6">
+                        <Image Source="ms-appx:///Assets/logo.png" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="FrameCast" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+            </NavigationView.PaneHeader>
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Tableau de bord" Tag="dashboard" IsSelected="True">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE7F4;"/></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Enregistrement" Tag="recording">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE7C8;"/></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Flux en direct" Tag="stream">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE93E;"/></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Vidéo &amp; Capture" Tag="video">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE714;"/></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Audio" Tag="audio">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE767;"/></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Mélangeur" Tag="mixer">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE9E9;"/></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Encodeur" Tag="encoder">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE950;"/></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Avancé" Tag="advanced">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE90F;"/></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Mises à jour" Tag="updates">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE895;"/></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="About" Tag="about">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE946;"/></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+            <NavigationView.PaneFooter>
+                <Button Margin="12,0,12,12" HorizontalAlignment="Stretch"
+                        Command="{x:Bind Vm.OpenGitHubCommand}"
+                        ToolTipService.ToolTip="Open GitHub repository">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE774;" FontSize="14"/>
+                        <TextBlock Text="GitHub" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </NavigationView.PaneFooter>
+            <Grid>
+                <Grid x:Name="DashboardPanel" Padding="16,16,16,16" RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <!-- Toolbar -->
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <ComboBox ItemsSource="{x:Bind Vm.Sources}" SelectedItem="{x:Bind Vm.SelectedSource, Mode=TwoWay}"
+                                      MinWidth="260" PlaceholderText="Capture source">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="cap:CaptureSource">
+                                        <TextBlock Text="{x:Bind Name}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Button ToolTipService.ToolTip="Refresh sources" Command="{x:Bind Vm.RefreshSourcesCommand}">
+                                <FontIcon Glyph="&#xE72C;" FontSize="14"/>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Button Command="{x:Bind Vm.ScreenshotCommand}" IsEnabled="{x:Bind Vm.NotScreenshotBusy, Mode=OneWay}" ToolTipService.ToolTip="Take screenshot">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE722;" FontSize="14"/>
+                                    <TextBlock Text="Screenshot" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <StackPanel Orientation="Horizontal" Spacing="6" Visibility="{x:Bind Vm.IsIdle, Mode=OneWay}">
+                                <Button Command="{x:Bind Vm.StartRecordCommand}" ToolTipService.ToolTip="Start recording">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Ellipse Width="8" Height="8" Fill="#FFEF6C5B"/>
+                                        <TextBlock Text="Record" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource AccentButtonStyle}" Command="{x:Bind Vm.StartLiveCommand}" ToolTipService.ToolTip="Start live stream">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE93E;" FontSize="14"/>
+                                        <TextBlock Text="Go Live" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6" Visibility="{x:Bind Vm.IsBusy, Mode=OneWay}">
+                                <Border CornerRadius="4" Padding="8,4" Background="#22EF6C5B" Visibility="{x:Bind Vm.IsRecording, Mode=OneWay}" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Ellipse Width="7" Height="7" Fill="#FFEF6C5B" VerticalAlignment="Center"/>
+                                        <TextBlock Text="REC" Foreground="#FFEF6C5B" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border CornerRadius="4" Padding="8,4" Background="#227C5CFF" Visibility="{x:Bind Vm.IsLive, Mode=OneWay}" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <FontIcon Glyph="&#xE93E;" FontSize="11" Foreground="#FF7C5CFF"/>
+                                        <TextBlock Text="LIVE" Foreground="#FF7C5CFF" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Button Command="{x:Bind Vm.PauseResumeCommand}" ToolTipService.ToolTip="Pause / Resume">
+                                    <FontIcon Glyph="{x:Bind Vm.PauseGlyph, Mode=OneWay}" FontSize="14"/>
+                                </Button>
+                                <Button Command="{x:Bind Vm.StopCommand}" ToolTipService.ToolTip="Stop">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE71A;" FontSize="13"/>
+                                        <TextBlock Text="Stop" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                    <!-- Stats row -->
+                    <Grid ColumnSpacing="10" Grid.Row="1">
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource CardStyle}" Grid.Column="0"><StackPanel><TextBlock Text="CPU" Opacity="0.6" FontSize="11"/><TextBlock Text="{x:Bind Vm.Cpu, Mode=OneWay}" FontSize="20"/><ProgressBar Value="{x:Bind Vm.CpuValue, Mode=OneWay}" Maximum="100"/></StackPanel></Border>
+                        <Border Style="{StaticResource CardStyle}" Grid.Column="1"><StackPanel><TextBlock Text="GPU (D3D)" Opacity="0.6" FontSize="11"/><TextBlock Text="{x:Bind Vm.Gpu, Mode=OneWay}" FontSize="20"/><ProgressBar Value="{x:Bind Vm.GpuValue, Mode=OneWay}" Maximum="100"/></StackPanel></Border>
+                        <Border Style="{StaticResource CardStyle}" Grid.Column="2"><StackPanel><TextBlock Text="Frame time" Opacity="0.6" FontSize="11"/><TextBlock Text="{x:Bind Vm.FrameTime, Mode=OneWay}" FontSize="20"/><TextBlock Text="{x:Bind Vm.FpsInfo, Mode=OneWay}" Opacity="0.7" TextWrapping="Wrap" FontSize="11"/></StackPanel></Border>
+                        <Border Style="{StaticResource CardStyle}" Grid.Column="3"><StackPanel><TextBlock Text="RAM" Opacity="0.6" FontSize="11"/><TextBlock Text="{x:Bind Vm.Ram, Mode=OneWay}" FontSize="20"/></StackPanel></Border>
+                        <Border Style="{StaticResource CardStyle}" Grid.Column="4"><StackPanel><TextBlock Text="Bitrate / drops" Opacity="0.6" FontSize="11"/><TextBlock Text="{x:Bind Vm.Bitrate, Mode=OneWay}" FontSize="20"/><TextBlock Text="{x:Bind Vm.Status, Mode=OneWay}" Opacity="0.7" TextWrapping="Wrap" MaxLines="3" IsTextSelectionEnabled="True" FontSize="11"/></StackPanel></Border>
+                    </Grid>
+                    <!-- Preview + per-app audio mixer -->
+                    <Grid Grid.Row="2" ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Adaptive preview -->
+                        <Border CornerRadius="10" Background="#FF0B0B0B"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <Grid>
+                                <TextBlock Text="No preview — choose a source and refresh"
+                                           Opacity="0.4" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Visibility="{x:Bind Vm.PreviewHiddenVis, Mode=OneWay}"/>
+                                <Viewbox Stretch="Uniform" Visibility="{x:Bind Vm.PreviewShownVis, Mode=OneWay}">
+                                    <SwapChainPanel x:Name="Preview"
+                                                    Width="{x:Bind Vm.PreviewWidth, Mode=OneWay}"
+                                                    Height="{x:Bind Vm.PreviewHeight, Mode=OneWay}"/>
+                                </Viewbox>
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8"
+                                        CornerRadius="14" Width="28" Height="28" Padding="0"
+                                        Visibility="{x:Bind Vm.PreviewShownVis, Mode=OneWay}"
+                                        Command="{x:Bind Vm.ClosePreviewCommand}"
+                                        ToolTipService.ToolTip="Hide preview (saves GPU)">
+                                    <FontIcon Glyph="&#xE711;" FontSize="12"/>
+                                </Button>
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8"
+                                        Visibility="{x:Bind Vm.PreviewHiddenVis, Mode=OneWay}"
+                                        Command="{x:Bind Vm.ShowPreviewCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE890;" FontSize="13"/>
+                                        <TextBlock Text="Show preview" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        <!-- Per-app audio mixer (expanded) -->
+                        <Border Grid.Column="1" CornerRadius="10" Width="236"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                Visibility="{x:Bind Vm.AppMixerExpanded2, Mode=OneWay}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Padding="10,8,6,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE767;" FontSize="13" Opacity="0.8"/>
+                                        <TextBlock Text="App Audio" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Padding="5,3" CornerRadius="6" Margin="0,0,4,0"
+                                            Command="{x:Bind Vm.RefreshAppAudioSessions2Command}"
+                                            ToolTipService.ToolTip="Refresh app list">
+                                        <FontIcon Glyph="&#xE72C;" FontSize="12"/>
+                                    </Button>
+                                    <Button Grid.Column="2" Padding="5,3" CornerRadius="6"
+                                            Command="{x:Bind Vm.ToggleAppMixerCommand}"
+                                            ToolTipService.ToolTip="Collapse">
+                                        <FontIcon Glyph="&#xE76C;" FontSize="12"/>
+                                    </Button>
+                                </Grid>
+                                <ScrollViewer Grid.Row="1" Padding="8,0,8,8">
+                                    <ItemsControl ItemsSource="{x:Bind Vm.AppAudioSessions, Mode=OneWay}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="local:AppAudioSessionVm">
+                                                <Border Padding="2,6" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                                                    <Grid ColumnSpacing="6">
+                                                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{x:Bind Name}" FontSize="12" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
+                                                        <ToggleButton Grid.Column="1" Padding="4,3" CornerRadius="6"
+                                                                      IsChecked="{x:Bind Muted, Mode=TwoWay}"
+                                                                      ToolTipService.ToolTip="Mute">
+                                                            <FontIcon Glyph="&#xE74F;" FontSize="11"/>
+                                                        </ToggleButton>
+                                                        <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,3,0,0" RowSpacing="1">
+                                                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                                            <ProgressBar Value="{x:Bind Peak, Mode=OneWay}" Maximum="1" Height="3" CornerRadius="2"/>
+                                                            <Slider Grid.Row="1" Minimum="0" Maximum="1" StepFrequency="0.01"
+                                                                    Value="{x:Bind Volume, Mode=TwoWay}" Padding="0" Margin="0,-5,0,-5"/>
+                                                        </Grid>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                        <!-- Collapsed: show small icon button -->
+                        <Button Grid.Column="1" VerticalAlignment="Top" Padding="6,5" CornerRadius="8"
+                                Visibility="{x:Bind Vm.AppMixerCollapsed, Mode=OneWay}"
+                                Command="{x:Bind Vm.ToggleAppMixerCommand}"
+                                ToolTipService.ToolTip="Show app audio mixer">
+                            <FontIcon Glyph="&#xE767;" FontSize="14"/>
+                        </Button>
+                    </Grid>
+                </Grid>
+                <ScrollViewer x:Name="RecordingPanel" Padding="24" Visibility="Collapsed">
+                    <StackPanel Spacing="16" MaxWidth="640" HorizontalAlignment="Left">
+                        <TextBlock Text="Format de sortie" Style="{StaticResource SectionTitle}"/>
+                        <ComboBox Header="Format du fichier" ItemsSource="{x:Bind Vm.OutputFormats}" SelectedItem="{x:Bind Vm.OutputFormat, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                        <ToggleSwitch Header="Horodatage dans le nom de fichier" IsOn="{x:Bind Vm.UseTimestampInFilename, Mode=TwoWay}"/>
+                        <TextBox Header="Préfixe du nom de fichier" Text="{x:Bind Vm.FilenamePrefixRec, Mode=TwoWay}"/>
+                        <ToggleSwitch Header="Ouvrir le dossier après l'enregistrement" IsOn="{x:Bind Vm.OpenFolderAfterRec, Mode=TwoWay}"/>
+                        <ToggleSwitch Header="MP4 résilient (fragmenté) : fichier lisible même après un plantage" IsOn="{x:Bind Vm.FragmentedMp4, Mode=TwoWay}"/>
+                        <TextBlock Text="Le MP4 fragmenté lit bien partout (VLC, navigateurs, Windows) mais certains logiciels de montage le gèrent moins bien. Si l'enregistrement échoue avec cette option, la désactiver." Opacity="0.6" TextWrapping="Wrap"/>
+                        <TextBlock Text="Découpage automatique" Style="{StaticResource SectionTitle}"/>
+                        <ToggleSwitch Header="Découper le fichier automatiquement" IsOn="{x:Bind Vm.SplitFileEnabled, Mode=TwoWay}"/>
+                        <StackPanel>
+                            <TextBlock Text="Taille maximale par fichier (GB)"/>
+                            <Slider Minimum="1" Maximum="64" StepFrequency="1" Value="{x:Bind Vm.SplitFileSizeGb, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.SplitFileSizeGb, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <TextBlock Text="Dossier de sortie" Style="{StaticResource SectionTitle}"/>
+                        <TextBox Header="Dossier d'enregistrement (REC)" Text="{x:Bind Vm.OutputFolder, Mode=TwoWay}"/>
+                        <TextBlock Text="Encodage" Style="{StaticResource SectionTitle}"/>
+                        <ComboBox Header="Codec" ItemsSource="{x:Bind Vm.Codecs}" SelectedItem="{x:Bind Vm.Codec, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                        <ComboBox Header="Contrôle du débit" ItemsSource="{x:Bind Vm.RateModes}" SelectedItem="{x:Bind Vm.RateMode, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                        <StackPanel Visibility="{x:Bind Vm.BitrateVisible, Mode=OneWay}">
+                            <TextBlock Text="Bitrate cible (kbps)"/>
+                            <Slider Minimum="500" Maximum="80000" StepFrequency="100" Value="{x:Bind Vm.BitrateKbps, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.BitrateKbps, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <StackPanel Visibility="{x:Bind Vm.QpVisible, Mode=OneWay}">
+                            <TextBlock Text="Qualité constante (QP — plus bas = meilleure qualité)"/>
+                            <Slider Minimum="0" Maximum="51" Value="{x:Bind Vm.Qp, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.Qp, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Intervalle d'images clés / GOP (secondes)"/>
+                            <Slider Minimum="1" Maximum="10" Value="{x:Bind Vm.GopSeconds, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.GopSeconds, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <ToggleSwitch Header="Images B (meilleure compression, latence +)" IsOn="{x:Bind Vm.BFramesEnabled, Mode=TwoWay}"/>
+                        <ToggleSwitch Header="Mode basse latence" IsOn="{x:Bind Vm.LowLatency, Mode=TwoWay}"/>
+                    </StackPanel>
+                </ScrollViewer>
+                <ScrollViewer x:Name="StreamPanel" Padding="24" Visibility="Collapsed">
+                    <StackPanel Spacing="16" MaxWidth="640" HorizontalAlignment="Left">
+                        <TextBlock Text="Service de streaming" Style="{StaticResource SectionTitle}"/>
+                        <ComboBox Header="Service" ItemsSource="{x:Bind Vm.Services}" SelectedItem="{x:Bind Vm.SelectedService, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                        <TextBox Header="URL d'ingest" Text="{x:Bind Vm.IngestUrl, Mode=TwoWay}"/>
+                        <PasswordBox Header="Clé de flux" Password="{x:Bind Vm.StreamKey, Mode=TwoWay}" PasswordRevealMode="Peek"/>
+                        <TextBlock Text="Mémoire tampon réseau" Style="{StaticResource SectionTitle}"/>
+                        <StackPanel>
+                            <TextBlock Text="Taille du tampon d'envoi (paquets audio/vidéo en file)"/>
+                            <Slider Minimum="30" Maximum="1000" StepFrequency="10" Value="{x:Bind Vm.RtmpQueueCapacity, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.RtmpQueueCapacity, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Taille de chunk RTMP (octets)"/>
+                            <Slider Minimum="128" Maximum="65536" StepFrequency="128" Value="{x:Bind Vm.RtmpChunkSize, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.RtmpChunkSize, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <TextBlock Text="Un tampon plus grand encaisse mieux les micro-coupures réseau au prix d'un peu de latence et de RAM. Au-delà de la capacité, les paquets les plus anciens sont jetés en priorité." Opacity="0.6" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </ScrollViewer>
+                <ScrollViewer x:Name="VideoPanel" Padding="24" Visibility="Collapsed">
+                    <StackPanel Spacing="16" MaxWidth="640" HorizontalAlignment="Left">
+                        <TextBlock Text="Écran &amp; capture" Style="{StaticResource SectionTitle}"/>
+                        <ComboBox Header="Fréquence d'images (FPS)" ItemsSource="{x:Bind Vm.FpsOptions}" SelectedItem="{x:Bind Vm.Fps, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                        <ComboBox Header="Échelle de la résolution encodée" ItemsSource="{x:Bind Vm.ScaleOptions}" SelectedItem="{x:Bind Vm.ScalePercent, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="L'aperçu reste toujours en pleine résolution ; seule la résolution encodée est réduite." Opacity="0.6" TextWrapping="Wrap"/>
+                        <ToggleSwitch Header="Capturer le curseur de la souris" IsOn="{x:Bind Vm.CaptureCursor, Mode=TwoWay}"/>
+                        <ToggleSwitch Header="Supprimer la bordure de capture WGC" IsOn="{x:Bind Vm.DisableWgcBorder, Mode=TwoWay}"/>
+                        <StackPanel>
+                            <TextBlock Text="Décalage de synchronisation vidéo (ms)"/>
+                            <Slider Minimum="-500" Maximum="500" StepFrequency="5" Value="{x:Bind Vm.CaptureOffsetMs, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.CaptureOffsetMs, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <ToggleSwitch Header="Démarrer l'aperçu automatiquement à l'ouverture" IsOn="{x:Bind Vm.AutoStartPreview, Mode=TwoWay}"/>
+                        <TextBlock Text="Captures d'écran" Style="{StaticResource SectionTitle}"/>
+                        <TextBox Header="Dossier des captures d'écran" Text="{x:Bind Vm.ScreenshotFolder, Mode=TwoWay}"/>
+                        <ComboBox Header="Format des captures" ItemsSource="{x:Bind Vm.ScreenshotFormats}" SelectedItem="{x:Bind Vm.ScreenshotFormat, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                        <ToggleSwitch Header="Copier automatiquement la capture dans le presse-papiers" IsOn="{x:Bind Vm.CopyScreenshotToClipboard, Mode=TwoWay}"/>
+                    </StackPanel>
+                </ScrollViewer>
+                <ScrollViewer x:Name="AudioPanel" Padding="24" Visibility="Collapsed">
+                    <StackPanel Spacing="16" MaxWidth="640" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <TextBlock Text="Périphériques audio" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                            <Button Content="&#xE72C;" FontFamily="Segoe Fluent Icons"
+                                    Command="{x:Bind Vm.RefreshAudioDevicesCommand}"
+                                    ToolTipService.ToolTip="Actualiser la liste des périphériques"/>
+                        </StackPanel>
+                        <ToggleSwitch Header="Son système (WASAPI loopback)" IsOn="{x:Bind Vm.AudioLoopback, Mode=TwoWay}"/>
+                        <ComboBox Header="Périphérique de sortie (loopback)"
+                                  ItemsSource="{x:Bind Vm.RenderDevices}"
+                                  SelectedItem="{x:Bind Vm.SelectedRenderDevice, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="aud:AudioDeviceInfo">
+                                    <TextBlock Text="{x:Bind Name}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <ToggleSwitch Header="Microphone" IsOn="{x:Bind Vm.AudioMic, Mode=TwoWay}"/>
+                        <ComboBox Header="Périphérique d'entrée (micro)"
+                                  ItemsSource="{x:Bind Vm.CaptureDevices}"
+                                  SelectedItem="{x:Bind Vm.SelectedCaptureDevice, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="aud:AudioDeviceInfo">
+                                    <TextBlock Text="{x:Bind Name}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <ToggleSwitch Header="Vumètres actifs hors enregistrement (le micro reste ouvert)" IsOn="{x:Bind Vm.MeterWhenIdle, Mode=TwoWay}"/>
+                        <TextBlock Text="Gains, gate, compresseur, ducking, limiteur et écoute : onglet Mélangeur." Opacity="0.6" TextWrapping="Wrap"/>
+                        <TextBlock Text="Encodage audio" Style="{StaticResource SectionTitle}"/>
+                        <StackPanel>
+                            <TextBlock Text="Bitrate AAC (kbps)"/>
+                            <Slider Minimum="64" Maximum="320" StepFrequency="32" Value="{x:Bind Vm.AudioBitrateKbps, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.AudioBitrateKbps, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <ComboBox Header="Fréquence d'échantillonnage (Hz)"
+                                  ItemsSource="{x:Bind Vm.AudioSampleRates}"
+                                  SelectedItem="{x:Bind Vm.AudioSampleRate, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="Tampon audio / latence" Style="{StaticResource SectionTitle}"/>
+                        <StackPanel>
+                            <TextBlock Text="Tampon audio / latence (ms)"/>
+                            <Slider Minimum="5" Maximum="100" StepFrequency="5" Value="{x:Bind Vm.AudioBufferMs, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.AudioBufferMs, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <TextBlock Text="Mixage interne stéréo, flottant 32 bits, à la fréquence choisie ci-dessus (44,1 ou 48 kHz : limites de l'encodeur AAC de Windows). Un tampon plus grand lisse les à-coups." Opacity="0.6" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </ScrollViewer>
+                <ScrollViewer x:Name="MixerPanel" Padding="24" Visibility="Collapsed">
+                    <StackPanel Spacing="16" MaxWidth="760" HorizontalAlignment="Left">
+                        <TextBlock Text="Mélangeur audio" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="Les réglages s'appliquent en direct, même pendant un enregistrement ou un live. Les sources (système / micro) se choisissent dans l'onglet Audio." Opacity="0.6" TextWrapping="Wrap"/>
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Son système (loopback)" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                                    <ToggleSwitch Grid.Column="1" Header="Muet" IsOn="{x:Bind Vm.LoopMute, Mode=TwoWay}"/>
+                                </Grid>
+                                <ProgressBar Minimum="0" Maximum="1" Height="10" Value="{x:Bind Vm.LoopMeter, Mode=OneWay}"/>
+                                <Slider Header="Gain (dB)" Minimum="-40" Maximum="12" StepFrequency="0.5" Value="{x:Bind Vm.LoopGainDb, Mode=TwoWay}"/>
+                                <Slider Header="Balance (gauche ← → droite)" Minimum="-1" Maximum="1" StepFrequency="0.05" Value="{x:Bind Vm.LoopPan, Mode=TwoWay}"/>
+                                <Slider Header="Retard de synchronisation (ms)" Minimum="0" Maximum="500" StepFrequency="5" Value="{x:Bind Vm.LoopDelayMs, Mode=TwoWay}"/>
+                                <Expander Header="Filtre passe-haut (coupe grondements, ventilo, chocs de bureau)" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                    <StackPanel Spacing="8">
+                                        <ToggleSwitch Header="Activé" IsOn="{x:Bind Vm.LoopHighPass, Mode=TwoWay}"/>
+                                        <Slider Header="Fréquence de coupure (Hz)" Minimum="20" Maximum="400" StepFrequency="5" Value="{x:Bind Vm.LoopHighPassHz, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Header="Noise gate (coupe le bruit de fond quand tu ne parles pas)" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                    <StackPanel Spacing="8">
+                                        <ToggleSwitch Header="Activé" IsOn="{x:Bind Vm.LoopGate, Mode=TwoWay}"/>
+                                        <Slider Header="Seuil d'ouverture (dB)" Minimum="-80" Maximum="0" StepFrequency="1" Value="{x:Bind Vm.LoopGateThresholdDb, Mode=TwoWay}"/>
+                                        <Slider Header="Attaque (ms)" Minimum="1" Maximum="100" StepFrequency="1" Value="{x:Bind Vm.LoopGateAttackMs, Mode=TwoWay}"/>
+                                        <Slider Header="Relâchement (ms)" Minimum="20" Maximum="1000" StepFrequency="10" Value="{x:Bind Vm.LoopGateReleaseMs, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Header="Compresseur (uniformise le volume)" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                    <StackPanel Spacing="8">
+                                        <ToggleSwitch Header="Activé" IsOn="{x:Bind Vm.LoopComp, Mode=TwoWay}"/>
+                                        <Slider Header="Seuil (dB)" Minimum="-60" Maximum="0" StepFrequency="1" Value="{x:Bind Vm.LoopCompThresholdDb, Mode=TwoWay}"/>
+                                        <Slider Header="Ratio (x:1)" Minimum="1" Maximum="20" StepFrequency="0.5" Value="{x:Bind Vm.LoopCompRatio, Mode=TwoWay}"/>
+                                        <Slider Header="Attaque (ms)" Minimum="1" Maximum="200" StepFrequency="1" Value="{x:Bind Vm.LoopCompAttackMs, Mode=TwoWay}"/>
+                                        <Slider Header="Relâchement (ms)" Minimum="10" Maximum="1000" StepFrequency="10" Value="{x:Bind Vm.LoopCompReleaseMs, Mode=TwoWay}"/>
+                                        <Slider Header="Gain de compensation (dB)" Minimum="0" Maximum="24" StepFrequency="0.5" Value="{x:Bind Vm.LoopCompMakeupDb, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                </Expander>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Microphone" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                                    <ToggleSwitch Grid.Column="1" Header="Muet" IsOn="{x:Bind Vm.MicMute, Mode=TwoWay}"/>
+                                </Grid>
+                                <ProgressBar Minimum="0" Maximum="1" Height="10" Value="{x:Bind Vm.MicMeter, Mode=OneWay}"/>
+                                <Slider Header="Gain (dB)" Minimum="-40" Maximum="12" StepFrequency="0.5" Value="{x:Bind Vm.MicGainDb, Mode=TwoWay}"/>
+                                <Slider Header="Balance (gauche ← → droite)" Minimum="-1" Maximum="1" StepFrequency="0.05" Value="{x:Bind Vm.MicPan, Mode=TwoWay}"/>
+                                <Slider Header="Retard de synchronisation (ms)" Minimum="0" Maximum="500" StepFrequency="5" Value="{x:Bind Vm.MicDelayMs, Mode=TwoWay}"/>
+                                <Expander Header="Filtre passe-haut (coupe grondements, ventilo, chocs de bureau)" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                    <StackPanel Spacing="8">
+                                        <ToggleSwitch Header="Activé" IsOn="{x:Bind Vm.MicHighPass, Mode=TwoWay}"/>
+                                        <Slider Header="Fréquence de coupure (Hz)" Minimum="20" Maximum="400" StepFrequency="5" Value="{x:Bind Vm.MicHighPassHz, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Header="Noise gate (coupe le bruit de fond quand tu ne parles pas)" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                    <StackPanel Spacing="8">
+                                        <ToggleSwitch Header="Activé" IsOn="{x:Bind Vm.MicGate, Mode=TwoWay}"/>
+                                        <Slider Header="Seuil d'ouverture (dB)" Minimum="-80" Maximum="0" StepFrequency="1" Value="{x:Bind Vm.MicGateThresholdDb, Mode=TwoWay}"/>
+                                        <Slider Header="Attaque (ms)" Minimum="1" Maximum="100" StepFrequency="1" Value="{x:Bind Vm.MicGateAttackMs, Mode=TwoWay}"/>
+                                        <Slider Header="Relâchement (ms)" Minimum="20" Maximum="1000" StepFrequency="10" Value="{x:Bind Vm.MicGateReleaseMs, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Header="Compresseur (uniformise le volume)" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                    <StackPanel Spacing="8">
+                                        <ToggleSwitch Header="Activé" IsOn="{x:Bind Vm.MicComp, Mode=TwoWay}"/>
+                                        <Slider Header="Seuil (dB)" Minimum="-60" Maximum="0" StepFrequency="1" Value="{x:Bind Vm.MicCompThresholdDb, Mode=TwoWay}"/>
+                                        <Slider Header="Ratio (x:1)" Minimum="1" Maximum="20" StepFrequency="0.5" Value="{x:Bind Vm.MicCompRatio, Mode=TwoWay}"/>
+                                        <Slider Header="Attaque (ms)" Minimum="1" Maximum="200" StepFrequency="1" Value="{x:Bind Vm.MicCompAttackMs, Mode=TwoWay}"/>
+                                        <Slider Header="Relâchement (ms)" Minimum="10" Maximum="1000" StepFrequency="10" Value="{x:Bind Vm.MicCompReleaseMs, Mode=TwoWay}"/>
+                                        <Slider Header="Gain de compensation (dB)" Minimum="0" Maximum="24" StepFrequency="0.5" Value="{x:Bind Vm.MicCompMakeupDb, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                </Expander>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Ducking (baisse le son système quand tu parles)" Style="{StaticResource SectionTitle}"/>
+                                <ToggleSwitch Header="Activé" IsOn="{x:Bind Vm.DuckingOn, Mode=TwoWay}"/>
+                                <Slider Header="Seuil de détection de la voix (dB)" Minimum="-70" Maximum="0" StepFrequency="1" Value="{x:Bind Vm.DuckThresholdDb, Mode=TwoWay}"/>
+                                <Slider Header="Réduction du son système (dB)" Minimum="0" Maximum="30" StepFrequency="1" Value="{x:Bind Vm.DuckAmountDb, Mode=TwoWay}"/>
+                                <Slider Header="Attaque (ms)" Minimum="5" Maximum="500" StepFrequency="5" Value="{x:Bind Vm.DuckAttackMs, Mode=TwoWay}"/>
+                                <Slider Header="Relâchement (ms)" Minimum="50" Maximum="3000" StepFrequency="50" Value="{x:Bind Vm.DuckReleaseMs, Mode=TwoWay}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Sortie générale (master)" Style="{StaticResource SectionTitle}"/>
+                                <TextBlock Text="Niveau gauche" Opacity="0.6"/>
+                                <ProgressBar Minimum="0" Maximum="1" Height="10" Value="{x:Bind Vm.MasterMeterL, Mode=OneWay}"/>
+                                <TextBlock Text="Niveau droit" Opacity="0.6"/>
+                                <ProgressBar Minimum="0" Maximum="1" Height="10" Value="{x:Bind Vm.MasterMeterR, Mode=OneWay}"/>
+                                <ToggleSwitch Header="Muet (master)" IsOn="{x:Bind Vm.MasterMute, Mode=TwoWay}"/>
+                                <Slider Header="Gain général (dB)" Minimum="-30" Maximum="12" StepFrequency="0.5" Value="{x:Bind Vm.MasterGainDb, Mode=TwoWay}"/>
+                                <ToggleSwitch Header="Limiteur (évite la saturation numérique)" IsOn="{x:Bind Vm.LimiterOn, Mode=TwoWay}"/>
+                                <Slider Header="Plafond du limiteur (dB)" Minimum="-12" Maximum="0" StepFrequency="0.5" Value="{x:Bind Vm.LimiterCeilingDb, Mode=TwoWay}"/>
+                                <TextBlock Text="{x:Bind Vm.MixerInfo, Mode=OneWay}" Opacity="0.7" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Écoute du mix (casque)" Style="{StaticResource SectionTitle}"/>
+                                <ToggleSwitch Header="Écouter le mix final" IsOn="{x:Bind Vm.MonitorAudio, Mode=TwoWay}"/>
+                                <ComboBox Header="Périphérique d'écoute" ItemsSource="{x:Bind Vm.RenderDevices}" SelectedItem="{x:Bind Vm.SelectedMonitorDevice, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="aud:AudioDeviceInfo"><TextBlock Text="{x:Bind Name}"/></DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock Text="Choisis un périphérique DIFFÉRENT de celui capturé en loopback (sinon larsen : l'écoute est alors bloquée). Prends ton casque, pas les haut-parleurs capturés." Opacity="0.6" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+                <ScrollViewer x:Name="EncoderPanel" Padding="24" Visibility="Collapsed">
+                    <StackPanel Spacing="16" MaxWidth="640" HorizontalAlignment="Left">
+                        <TextBlock Text="Contrôle avancé du débit" Style="{StaticResource SectionTitle}"/>
+                        <ToggleSwitch Header="Tampon VBV (limite les pics de bitrate)" IsOn="{x:Bind Vm.EnableVbvBuffer, Mode=TwoWay}"/>
+                        <StackPanel>
+                            <TextBlock Text="Taille du tampon VBV (ms)"/>
+                            <Slider Minimum="100" Maximum="8000" StepFrequency="100" Value="{x:Bind Vm.VbvBufferSizeMs, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.VbvBufferSizeMs, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <ToggleSwitch Header="Bitrate adaptatif (ABR)" IsOn="{x:Bind Vm.AdaptiveBitrate, Mode=TwoWay}"/>
+                        <TextBlock Text="Couleur &amp; espace colorimétrique" Style="{StaticResource SectionTitle}"/>
+                        <ComboBox Header="Espace colorimétrique" ItemsSource="{x:Bind Vm.ColorSpaces}" SelectedItem="{x:Bind Vm.ColorSpace, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="Moteur d'encodage" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="{x:Bind Vm.EncoderName, Mode=OneWay}" Opacity="0.8"/>
+                        <TextBlock Text="Le moteur est automatiquement sélectionné selon votre GPU (NVENC / AMF / QSV). Les réglages avancés ici s'appliquent via ICodecAPI." Opacity="0.6" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </ScrollViewer>
+                <ScrollViewer x:Name="AdvancedPanel" Padding="24" Visibility="Collapsed">
+                    <StackPanel Spacing="16" MaxWidth="640" HorizontalAlignment="Left">
+                        <TextBlock Text="Système" Style="{StaticResource SectionTitle}"/>
+                        <ComboBox Header="Priorité du processus" ItemsSource="{x:Bind Vm.PriorityOptions}" SelectedItem="{x:Bind Vm.ProcessPriority, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="Interface" Style="{StaticResource SectionTitle}"/>
+                        <ToggleSwitch Header="Réduire dans la barre des tâches système" IsOn="{x:Bind Vm.MinimizeToTray, Mode=TwoWay}"/>
+                        <ToggleSwitch Header="Démarrer réduit" IsOn="{x:Bind Vm.StartMinimized, Mode=TwoWay}"/>
+                        <TextBlock Text="Arrêt automatique" Style="{StaticResource SectionTitle}"/>
+                        <ToggleSwitch Header="Arrêter l'enregistrement après inactivité" IsOn="{x:Bind Vm.AutoStopAfterInactivity, Mode=TwoWay}"/>
+                        <StackPanel>
+                            <TextBlock Text="Délai avant arrêt (minutes)"/>
+                            <Slider Minimum="5" Maximum="240" StepFrequency="5" Value="{x:Bind Vm.AutoStopMinutes, Mode=TwoWay}"/>
+                            <TextBlock Text="{x:Bind Vm.AutoStopMinutes, Mode=OneWay}" Opacity="0.6"/>
+                        </StackPanel>
+                        <TextBlock Text="Journalisation" Style="{StaticResource SectionTitle}"/>
+                        <ComboBox Header="Niveau de journalisation" ItemsSource="{x:Bind Vm.LogLevels}" SelectedItem="{x:Bind Vm.LogLevel, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="Langue / Language" Style="{StaticResource SectionTitle}"/>
+                        <ComboBox Header="Langue de l'interface / Interface language"
+                                  ItemsSource="{x:Bind Vm.LanguageOptions}"
+                                  SelectedItem="{x:Bind Vm.AppLanguage, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="Le changement de langue prend effet au redémarrage de l'application. / Language change takes effect after restarting the app." Opacity="0.6" TextWrapping="Wrap"/>
+                        <TextBlock Text="Discord Rich Presence" Style="{StaticResource SectionTitle}"/>
+                        <ToggleSwitch Header="Afficher l'activité sur Discord / Show activity on Discord"
+                                      IsOn="{x:Bind Vm.DiscordRpcEnabled, Mode=TwoWay}"/>
+                        <TextBlock Text="Affiche 'Recording', 'Live Streaming' ou 'Idle' dans votre statut Discord. Nécessite que Discord soit ouvert. / Shows your recording/streaming status in Discord. Requires Discord to be running." Opacity="0.6" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </ScrollViewer>
+                <ScrollViewer x:Name="UpdatesPanel" Padding="24" Visibility="Collapsed">
+                    <StackPanel Spacing="16" MaxWidth="640" HorizontalAlignment="Left">
+                        <TextBlock Text="Mises à jour" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="{x:Bind Vm.VersionLabel}" Opacity="0.6"/>
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="{x:Bind Vm.UpdateStatus, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
+                                <ProgressBar Maximum="100" Value="{x:Bind Vm.UpdateProgress, Mode=OneWay}" Visibility="{x:Bind Vm.UpdateBusy, Mode=OneWay}"/>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Content="Vérifier les mises à jour" Command="{x:Bind Vm.CheckForUpdatesCommand}" IsEnabled="{x:Bind Vm.NotUpdateBusy, Mode=OneWay}"/>
+                                    <Button Content="Télécharger et installer" Style="{StaticResource AccentButtonStyle}"
+                                            Command="{x:Bind Vm.InstallUpdateCommand}" Visibility="{x:Bind Vm.ShowDownloadButton, Mode=OneWay}" IsEnabled="{x:Bind Vm.NotUpdateBusy, Mode=OneWay}"/>
+                                    <Button Content="Redémarrer et installer" Style="{StaticResource AccentButtonStyle}"
+                                            Command="{x:Bind Vm.InstallUpdateCommand}" Visibility="{x:Bind Vm.UpdateReady, Mode=OneWay}" IsEnabled="{x:Bind Vm.NotUpdateBusy, Mode=OneWay}"/>
+                                    <Button Content="Voir la release" Command="{x:Bind Vm.OpenReleasePageCommand}" Visibility="{x:Bind Vm.UpdateAvailable, Mode=OneWay}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="{x:Bind Vm.UpdateNotes, Mode=OneWay}" Opacity="0.7" TextWrapping="Wrap" MaxLines="12" Visibility="{x:Bind Vm.UpdateAvailable, Mode=OneWay}"/>
+                        <ToggleSwitch Header="Télécharger les mises à jour automatiquement en arrière-plan" IsOn="{x:Bind Vm.AutoDownloadUpdates, Mode=TwoWay}"/>
+                        <ToggleSwitch Header="Installer une mise à jour prête à la fermeture de l'application" IsOn="{x:Bind Vm.InstallUpdateOnExit, Mode=TwoWay}"/>
+                        <TextBlock Text="Vérification au lancement puis toutes les 6 h. Chaque paquet est contrôlé (taille, SHA-256, contenu) avant installation ; en cas d'échec, l'ancienne version est restaurée automatiquement. Journal : %LocalAppData%\FrameCastStudio\update.log" Opacity="0.6" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </ScrollViewer>
+                <ScrollViewer x:Name="AboutPanel" Padding="24" Visibility="Collapsed">
+                    <StackPanel Spacing="24" MaxWidth="560" HorizontalAlignment="Center">
+                        <!-- Hero card -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="16" HorizontalAlignment="Center">
+                                <Border Width="72" Height="72" CornerRadius="16" Background="#F4F4F6" HorizontalAlignment="Center">
+                                    <Image Source="ms-appx:///Assets/logo.png" Width="56" Height="56"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                    <TextBlock Text="FrameCast Studio" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{x:Bind Vm.VersionLabel}" Opacity="0.6" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="Professional screen capture, recording &amp; live streaming for Windows."
+                                           TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" Opacity="0.8"/>
+                                <Button Command="{x:Bind Vm.OpenGitHubCommand}"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        HorizontalAlignment="Center">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon Glyph="&#xE774;" FontSize="14"/>
+                                            <TextBlock Text="Open on GitHub" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                        <!-- Tech info -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Technology" FontSize="15" FontWeight="SemiBold"/>
+                                <Grid ColumnSpacing="8" RowSpacing="6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Framework" Opacity="0.6"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text=".NET 10 · WinUI 3 · Windows App SDK"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Capture" Opacity="0.6"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Windows Graphics Capture (WGC) · Direct3D 11"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Encoding" Opacity="0.6"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="NVENC / AMF / QSV via ICodecAPI"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Streaming" Opacity="0.6"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="RTMP / RTMPS · FLV muxer"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <!-- Legal -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="License &amp; Credits" FontSize="15" FontWeight="SemiBold"/>
+                                <TextBlock Text="FrameCast Studio is open-source software released under the MIT License." TextWrapping="Wrap" Opacity="0.8"/>
+                                <TextBlock Text="© 2026 ArizakiDev. All rights reserved." Opacity="0.6"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </NavigationView>
+    </Grid>
+</winex:WindowEx>
