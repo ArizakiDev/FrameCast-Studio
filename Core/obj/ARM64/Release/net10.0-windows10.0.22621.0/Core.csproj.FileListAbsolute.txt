@@ -1,0 +1,12 @@
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\bin\ARM64\Release\net10.0-windows10.0.22621.0\Core.deps.json
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\bin\ARM64\Release\net10.0-windows10.0.22621.0\Core.dll
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\bin\ARM64\Release\net10.0-windows10.0.22621.0\Core.pdb
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\obj\ARM64\Release\net10.0-windows10.0.22621.0\Core.csproj.AssemblyReference.cache
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\obj\ARM64\Release\net10.0-windows10.0.22621.0\Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\obj\ARM64\Release\net10.0-windows10.0.22621.0\Core.AssemblyInfoInputs.cache
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\obj\ARM64\Release\net10.0-windows10.0.22621.0\Core.AssemblyInfo.cs
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\obj\ARM64\Release\net10.0-windows10.0.22621.0\Core.csproj.CoreCompileInputs.cache
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\obj\ARM64\Release\net10.0-windows10.0.22621.0\Core.dll
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\obj\ARM64\Release\net10.0-windows10.0.22621.0\refint\Core.dll
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\obj\ARM64\Release\net10.0-windows10.0.22621.0\Core.pdb
+C:\Users\Arizaki\Downloads\FrameCastStudio\Core\obj\ARM64\Release\net10.0-windows10.0.22621.0\ref\Core.dll

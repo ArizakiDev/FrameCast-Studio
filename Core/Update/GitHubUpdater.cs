@@ -74,6 +74,27 @@ public sealed class GitHubUpdater
     private static string ArchToken() =>
         RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-arm64" : "win-x64";
 
+    /// <summary>
+    /// Choisit le .zip de la release pour l'architecture courante.
+    /// Ordre : nom contenant win-x64 / win-arm64 (nom produit par publish.bat), puis x64 / arm64 seul,
+    /// puis un unique .zip sans mention d'architecture. Un zip d'une autre architecture n'est jamais retenu.
+    /// </summary>
+    internal static string? PickAsset(IEnumerable<string> names, bool arm64)
+    {
+        var zips = names.Where(n => n.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)).ToList();
+        string[] mine = arm64 ? new[] { "win-arm64", "arm64" } : new[] { "win-x64", "x64", "amd64" };
+        string[] other = arm64 ? new[] { "win-x64", "x64", "amd64" } : new[] { "win-arm64", "arm64" };
+
+        foreach (var token in mine)
+        {
+            var hit = zips.FirstOrDefault(n => n.Contains(token, StringComparison.OrdinalIgnoreCase)
+                                             && !other.Any(o => n.Contains(o, StringComparison.OrdinalIgnoreCase)));
+            if (hit != null) return hit;
+        }
+        var neutral = zips.Where(n => !mine.Concat(other).Any(t => n.Contains(t, StringComparison.OrdinalIgnoreCase))).ToList();
+        return neutral.Count == 1 ? neutral[0] : null;
+    }
+
     public async Task<UpdateCheckResult> CheckAsync(string currentVersion, CancellationToken ct = default)
     {
         if (!IsConfigured)
@@ -104,23 +125,23 @@ public sealed class GitHubUpdater
             string? assetUrl = null, assetName = null, sha = null, checksumUrl = null; long size = 0;
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
             {
-                string arch = ArchToken();
-                foreach (var a in assets.EnumerateArray())
+                var list = assets.EnumerateArray().ToList();
+                var picked = PickAsset(list.Select(a => Str(a, "name")), RuntimeInformation.ProcessArchitecture == Architecture.Arm64);
+                if (picked != null)
                 {
-                    string name = Str(a, "name");
-                    if (name.Contains(arch, StringComparison.OrdinalIgnoreCase) && name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    foreach (var a in list)
                     {
-                        assetName = name; assetUrl = Str(a, "browser_download_url");
+                        if (!string.Equals(Str(a, "name"), picked, StringComparison.OrdinalIgnoreCase)) continue;
+                        assetName = picked; assetUrl = Str(a, "browser_download_url");
                         size = a.TryGetProperty("size", out var sz) && sz.TryGetInt64(out var sv) ? sv : 0;
                         string digest = Str(a, "digest");
                         if (digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase)) sha = digest[7..].Trim().ToLowerInvariant();
                         break;
                     }
-                }
-                if (assetName != null)
-                    foreach (var a in assets.EnumerateArray())
+                    foreach (var a in list)
                         if (string.Equals(Str(a, "name"), assetName + ".sha256", StringComparison.OrdinalIgnoreCase))
                         { checksumUrl = Str(a, "browser_download_url"); break; }
+                }
             }
 
             if (vLatest <= vCur)
@@ -143,7 +164,7 @@ public sealed class GitHubUpdater
     public async Task<StagedUpdate> DownloadAndStageAsync(ReleaseInfo info, IProgress<double>? progress, CancellationToken ct = default)
     {
         if (info.AssetUrl is null)
-            throw new InvalidOperationException($"La release {info.Version} ne contient pas de package .zip pour cette architecture (attendu : *{ArchToken()}*.zip).");
+            throw new InvalidOperationException($"La release {info.Version} ne contient pas de package .zip pour cette architecture (attendu : FrameCastStudio-v1.2.3-{ArchToken()}.zip).");
         if (!TryParseVersion(info.Version, out var vRelease))
             throw new InvalidOperationException("Version de release illisible : " + info.Version);
 
