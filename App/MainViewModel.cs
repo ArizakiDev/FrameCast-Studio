@@ -394,10 +394,16 @@ public sealed partial class MainViewModel : ObservableObject
 
     public async Task InitializeAsync()
     {
-        RefreshSources();
-        RefreshAudioDevices();
-        if (AutoStartPreview && SelectedSource != null)
-            await StartAsync("preview");
+        try { RefreshSources(); }
+        catch (Exception ex) { FrameCastStudio.Core.Log.Error("RefreshSources", ex); Status = "Erreur sources : " + ex.Message; }
+        try { RefreshAudioDevices(); }
+        catch (Exception ex) { FrameCastStudio.Core.Log.Error("RefreshAudioDevices", ex); }
+        try
+        {
+            if (AutoStartPreview && SelectedSource != null)
+                await StartAsync("preview");
+        }
+        catch (Exception ex) { FrameCastStudio.Core.Log.Error("Aperçu initial", ex); }
         StartUpdateLoop();
     }
 
@@ -610,6 +616,7 @@ public sealed partial class MainViewModel : ObservableObject
     private void StartUpdateLoop()
     {
         if (Debugger.IsAttached) { UpdateStatus = "Mises à jour désactivées (débogueur attaché)."; return; }
+        if (Environment.GetEnvironmentVariable("FRAMECAST_SMOKETEST") == "1") { UpdateStatus = "Mises à jour désactivées (FRAMECAST_SMOKETEST)."; return; }
         var outcome = UpdateState.ConsumeOutcome(CurrentVersion);
         if (outcome != null) FrameCastStudio.Core.Log.Write(outcome.Message);
         _ = Task.Run(() => GitHubUpdater.Cleanup(CurrentVersion));

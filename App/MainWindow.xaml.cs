@@ -49,12 +49,21 @@ public sealed partial class MainWindow : WindowEx
         Activated += async (_, _) =>
         {
             if (_initialized) return; _initialized = true;
-            await Vm.InitializeAsync();
-            Vm.RefreshAppAudioSessions();
-            if (Vm.StartMinimized)
+            try
             {
-                if (Vm.MinimizeToTray) HideToTray();
-                else (AppWindow.Presenter as OverlappedPresenter)?.Minimize();
+                await Vm.InitializeAsync();
+                try { Vm.RefreshAppAudioSessions(); }
+                catch (Exception ex) { FrameCastStudio.Core.Log.Error("Sessions audio", ex); }
+                if (Vm.StartMinimized)
+                {
+                    if (Vm.MinimizeToTray) HideToTray();
+                    else (AppWindow.Presenter as OverlappedPresenter)?.Minimize();
+                }
+            }
+            catch (Exception ex)
+            {
+                FrameCastStudio.Core.Log.Error("Initialisation", ex);
+                Vm.Status = "Erreur au démarrage : " + ex.Message;
             }
         };
     }
