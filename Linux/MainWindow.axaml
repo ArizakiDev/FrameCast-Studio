@@ -12,31 +12,31 @@
       <StackPanel Spacing="2">
         <StackPanel Classes="row"><TextBlock Text="Gain (dB)" />
           <Slider Minimum="-30" Maximum="20" Width="260" Value="{Binding GainDb}" />
-          <TextBlock Text="{Binding GainDb, StringFormat='{0:0.0}'}" MinWidth="40" />
+          <TextBlock Text="{Binding GainDb, Converter={x:Static vm:Fmt.Instance}, ConverterParameter='0.0'}" MinWidth="40" />
           <CheckBox Content="Muet" IsChecked="{Binding Mute}" /></StackPanel>
         <StackPanel Classes="row"><TextBlock Text="Balance G/D" />
           <Slider Minimum="-1" Maximum="1" Width="260" Value="{Binding Pan}" />
-          <TextBlock Text="{Binding Pan, StringFormat='{0:0.00}'}" MinWidth="40" /></StackPanel>
+          <TextBlock Text="{Binding Pan, Converter={x:Static vm:Fmt.Instance}, ConverterParameter='0.00'}" MinWidth="40" /></StackPanel>
         <StackPanel Classes="row"><TextBlock Text="Retard (ms)" />
           <Slider Minimum="0" Maximum="500" Width="260" Value="{Binding DelayMs}" />
-          <TextBlock Text="{Binding DelayMs, StringFormat='{0:0}'}" MinWidth="40" /></StackPanel>
+          <TextBlock Text="{Binding DelayMs, Converter={x:Static vm:Fmt.Instance}, ConverterParameter='0'}" MinWidth="40" /></StackPanel>
         <StackPanel Classes="row"><TextBlock Text="Filtre passe-haut" />
           <CheckBox Content="Activé" IsChecked="{Binding HighPass}" />
           <Slider Minimum="20" Maximum="400" Width="200" Value="{Binding HighPassHz}" />
-          <TextBlock Text="{Binding HighPassHz, StringFormat='{0:0} Hz'}" MinWidth="60" /></StackPanel>
+          <TextBlock Text="{Binding HighPassHz, Converter={x:Static vm:Fmt.Instance}, ConverterParameter='0 Hz'}" MinWidth="60" /></StackPanel>
         <StackPanel Classes="row"><TextBlock Text="Noise gate" />
           <CheckBox Content="Activé" IsChecked="{Binding Gate}" />
           <TextBlock Text="Seuil" MinWidth="40" />
           <Slider Minimum="-80" Maximum="-10" Width="180" Value="{Binding GateThresholdDb}" />
-          <TextBlock Text="{Binding GateThresholdDb, StringFormat='{0:0} dB'}" MinWidth="60" /></StackPanel>
+          <TextBlock Text="{Binding GateThresholdDb, Converter={x:Static vm:Fmt.Instance}, ConverterParameter='0 dB'}" MinWidth="60" /></StackPanel>
         <StackPanel Classes="row"><TextBlock Text="Compresseur" />
           <CheckBox Content="Activé" IsChecked="{Binding Comp}" />
           <TextBlock Text="Seuil" MinWidth="40" />
           <Slider Minimum="-50" Maximum="0" Width="150" Value="{Binding CompThresholdDb}" />
-          <TextBlock Text="{Binding CompThresholdDb, StringFormat='{0:0} dB'}" MinWidth="55" />
+          <TextBlock Text="{Binding CompThresholdDb, Converter={x:Static vm:Fmt.Instance}, ConverterParameter='0 dB'}" MinWidth="55" />
           <TextBlock Text="Ratio" MinWidth="40" />
           <Slider Minimum="1" Maximum="20" Width="120" Value="{Binding CompRatio}" />
-          <TextBlock Text="{Binding CompRatio, StringFormat='{0:0.0}:1'}" MinWidth="50" /></StackPanel>
+          <TextBlock Text="{Binding CompRatio, Converter={x:Static vm:Fmt.Instance}, ConverterParameter='0.0:1'}" MinWidth="50" /></StackPanel>
       </StackPanel>
     </DataTemplate>
   </Window.DataTemplates>
@@ -47,7 +47,11 @@
       <Image Source="avares://FrameCastStudio/Assets/logo.png" Width="44" Height="44" Margin="0,0,12,0" />
       <StackPanel Grid.Column="1" VerticalAlignment="Center">
         <TextBlock Text="FrameCast Studio" FontSize="20" FontWeight="Bold" />
-        <TextBlock Classes="hint" Text="{Binding CurrentVersion, StringFormat='Version {0} pour Linux'}" />
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Classes="hint" Text="Version " />
+          <TextBlock Classes="hint" Text="{Binding CurrentVersion}" />
+          <TextBlock Classes="hint" Text=" pour Linux" />
+        </StackPanel>
       </StackPanel>
       <TextBlock Grid.Column="2" Text="{Binding Status}" FontSize="15" VerticalAlignment="Center" />
     </Grid>
@@ -129,7 +133,7 @@
               <NumericUpDown Value="{Binding BitrateKbps}" Minimum="500" Maximum="100000" Increment="500" Width="160" FormatString="0" /></StackPanel>
             <StackPanel Classes="row" IsVisible="{Binding ShowQp}"><TextBlock Text="Qualité (QP / CRF)" />
               <Slider Minimum="10" Maximum="40" Width="260" IsSnapToTickEnabled="True" TickFrequency="1" Value="{Binding Qp}" />
-              <TextBlock Text="{Binding Qp, StringFormat='{0:0}'}" MinWidth="30" /></StackPanel>
+              <TextBlock Text="{Binding Qp, Converter={x:Static vm:Fmt.Instance}, ConverterParameter='0'}" MinWidth="30" /></StackPanel>
             <StackPanel Classes="row"><TextBlock Text="Image clé toutes les (s)" />
               <ComboBox ItemsSource="{Binding GopChoices}" SelectedItem="{Binding GopSeconds}" Width="100" /></StackPanel>
             <StackPanel Classes="row"><TextBlock Text="Espace colorimétrique" />
@@ -197,12 +201,12 @@
             <TextBlock Classes="h" Text="Master" Margin="0,0,0,4" />
             <StackPanel Classes="row"><TextBlock Text="Gain master (dB)" />
               <Slider Minimum="-30" Maximum="20" Width="260" Value="{Binding MasterGainDb}" />
-              <TextBlock Text="{Binding MasterGainDb, StringFormat='{0:0.0}'}" MinWidth="40" />
+              <TextBlock Text="{Binding MasterGainDb, Converter={x:Static vm:Fmt.Instance}, ConverterParameter='0.0'}" MinWidth="40" />
               <CheckBox Content="Muet" IsChecked="{Binding MasterMute}" /></StackPanel>
             <StackPanel Classes="row"><TextBlock Text="Limiteur" />
               <CheckBox Content="Activé" IsChecked="{Binding LimiterOn}" />
               <Slider Minimum="-12" Maximum="0" Width="200" Value="{Binding LimiterCeilingDb}" />
-              <TextBlock Text="{Binding LimiterCeilingDb, StringFormat='{0:0.0} dB'}" MinWidth="60" /></StackPanel>
+              <TextBlock Text="{Binding LimiterCeilingDb, Converter={x:Static vm:Fmt.Instance}, ConverterParameter='0.0 dB'}" MinWidth="60" /></StackPanel>
             <StackPanel Classes="row"><TextBlock Text="Ducking (le micro baisse le système)" />
               <CheckBox Content="Activé" IsChecked="{Binding DuckingOn}" /></StackPanel>
             <StackPanel Classes="row" IsVisible="{Binding DuckingOn}"><TextBlock Text="Seuil micro (dB)" />
