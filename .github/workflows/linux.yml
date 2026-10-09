@@ -30,7 +30,7 @@ jobs:
 
       - name: Build (tar.gz + AppImage)
         working-directory: Linux
-        run: ./packaging/build-linux.sh ${{ matrix.arch }}
+        run: bash packaging/build-linux.sh ${{ matrix.arch }}
 
       - uses: actions/upload-artifact@v4
         with:
