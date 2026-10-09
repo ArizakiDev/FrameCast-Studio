@@ -36,26 +36,19 @@ public sealed class PortalScreenCast : IAsyncDisposable
     private static readonly ObjectPath PortalPath = new("/org/freedesktop/portal/desktop");
 
     private Connection? _conn;
+    private string _localName = "";
     private ObjectPath? _session;
-
-    public static async Task<bool> IsAvailableAsync()
-    {
-        try
-        {
-            var c = Connection.Session;
-            await c.ConnectAsync();
-            var p = c.CreateProxy<IScreenCastPortal>(Service, PortalPath);
-            _ = p; // le simple fait de se connecter au bus de session suffit à savoir qu'on peut tenter
-            return true;
-        }
-        catch { return false; }
-    }
 
     public async Task<PortalStream> StartAsync(bool cursor, string? restoreToken, CancellationToken ct = default)
     {
-        _conn = Connection.Session;
-        await _conn.ConnectAsync();
-        var portal = _conn.CreateProxy<IScreenCastPortal>(Service, PortalPath);
+        // Connexion dédiée à cette session : le portail ferme la session si la connexion tombe.
+        var conn = new Connection(Address.Session ?? throw new InvalidOperationException("Pas de bus de session D-Bus (DBUS_SESSION_BUS_ADDRESS vide)."));
+        _conn = conn;
+        object info = await conn.ConnectAsync();
+        _localName = info.GetType().GetProperty("LocalName")?.GetValue(info) as string
+                     ?? conn.GetType().GetProperty("LocalName")?.GetValue(conn) as string
+                     ?? throw new InvalidOperationException("Nom D-Bus de la connexion introuvable.");
+        var portal = conn.CreateProxy<IScreenCastPortal>(Service, PortalPath);
 
         // 1. CreateSession
         var o1 = new Dictionary<string, object> { ["session_handle_token"] = "fc" + Guid.NewGuid().ToString("N")[..10] };
@@ -115,11 +108,11 @@ public sealed class PortalScreenCast : IAsyncDisposable
     {
         string token = "fc" + Guid.NewGuid().ToString("N")[..12];
         options["handle_token"] = token;
-        string sender = _conn!.LocalName.TrimStart(':').Replace('.', '_');
+        string sender = _localName.TrimStart(':').Replace('.', '_');
         var reqPath = new ObjectPath($"/org/freedesktop/portal/desktop/request/{sender}/{token}");
 
         var tcs = new TaskCompletionSource<(uint, IDictionary<string, object>)>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var req = _conn.CreateProxy<IPortalRequest>(Service, reqPath);
+        var req = _conn!.CreateProxy<IPortalRequest>(Service, reqPath);
         using var sub = await req.WatchResponseAsync(r => tcs.TrySetResult(r), ex => tcs.TrySetException(ex));
         await call(options);
 
@@ -142,6 +135,8 @@ public sealed class PortalScreenCast : IAsyncDisposable
         }
         catch { }
         _session = null;
+        try { _conn?.Dispose(); } catch { }
+        _conn = null;
     }
 
     public async ValueTask DisposeAsync() => await CloseAsync();

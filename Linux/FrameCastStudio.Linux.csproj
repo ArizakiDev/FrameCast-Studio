@@ -18,7 +18,7 @@
     <TieredPGO>true</TieredPGO>
     <ServerGarbageCollector>false</ServerGarbageCollector>
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
-    <NoWarn>$(NoWarn);CS8618;MVVMTK0045</NoWarn>
+    <NoWarn>$(NoWarn);CS8618;MVVMTK0045;CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.*" />
