@@ -36,7 +36,7 @@ cp "$HERE/LICENSE-FFMPEG.txt" "$WORK/app/ffmpeg/LICENSE-FFMPEG.txt" 2>/dev/null 
 echo "==> .tar.gz"
 rm -rf "$WORK/tar" && mkdir -p "$WORK/tar/FrameCastStudio"
 cp -a "$WORK/app/." "$WORK/tar/FrameCastStudio/"
-cp "$HERE/run.sh" "$WORK/tar/FrameCastStudio/run.sh"
+cp "$HERE/run.sh" "$WORK/tar/FrameCastStudio/run.sh"; chmod +x "$WORK/tar/FrameCastStudio/run.sh"
 cp "$HERE/framecaststudio.desktop" "$HERE/framecaststudio.png" "$WORK/tar/FrameCastStudio/"
 tar -C "$WORK/tar" -czf "$OUT/$NAME.tar.gz" FrameCastStudio
 
