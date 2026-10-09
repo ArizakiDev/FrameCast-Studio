@@ -1,0 +1,304 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FrameCastStudio.Linux.ViewModels"
+        x:Class="FrameCastStudio.Linux.MainWindow"
+        Title="FrameCast Studio"
+        Icon="avares://FrameCastStudio/Assets/logo.png"
+        Width="1080" Height="780" MinWidth="880" MinHeight="620"
+        WindowStartupLocation="CenterScreen">
+
+  <Window.DataTemplates>
+    <DataTemplate DataType="vm:StripVm">
+      <StackPanel Spacing="2">
+        <StackPanel Classes="row"><TextBlock Text="Gain (dB)" />
+          <Slider Minimum="-30" Maximum="20" Width="260" Value="{Binding GainDb}" />
+          <TextBlock Text="{Binding GainDb, StringFormat='{0:0.0}'}" MinWidth="40" />
+          <CheckBox Content="Muet" IsChecked="{Binding Mute}" /></StackPanel>
+        <StackPanel Classes="row"><TextBlock Text="Balance G/D" />
+          <Slider Minimum="-1" Maximum="1" Width="260" Value="{Binding Pan}" />
+          <TextBlock Text="{Binding Pan, StringFormat='{0:0.00}'}" MinWidth="40" /></StackPanel>
+        <StackPanel Classes="row"><TextBlock Text="Retard (ms)" />
+          <Slider Minimum="0" Maximum="500" Width="260" Value="{Binding DelayMs}" />
+          <TextBlock Text="{Binding DelayMs, StringFormat='{0:0}'}" MinWidth="40" /></StackPanel>
+        <StackPanel Classes="row"><TextBlock Text="Filtre passe-haut" />
+          <CheckBox Content="Activé" IsChecked="{Binding HighPass}" />
+          <Slider Minimum="20" Maximum="400" Width="200" Value="{Binding HighPassHz}" />
+          <TextBlock Text="{Binding HighPassHz, StringFormat='{0:0} Hz'}" MinWidth="60" /></StackPanel>
+        <StackPanel Classes="row"><TextBlock Text="Noise gate" />
+          <CheckBox Content="Activé" IsChecked="{Binding Gate}" />
+          <TextBlock Text="Seuil" MinWidth="40" />
+          <Slider Minimum="-80" Maximum="-10" Width="180" Value="{Binding GateThresholdDb}" />
+          <TextBlock Text="{Binding GateThresholdDb, StringFormat='{0:0} dB'}" MinWidth="60" /></StackPanel>
+        <StackPanel Classes="row"><TextBlock Text="Compresseur" />
+          <CheckBox Content="Activé" IsChecked="{Binding Comp}" />
+          <TextBlock Text="Seuil" MinWidth="40" />
+          <Slider Minimum="-50" Maximum="0" Width="150" Value="{Binding CompThresholdDb}" />
+          <TextBlock Text="{Binding CompThresholdDb, StringFormat='{0:0} dB'}" MinWidth="55" />
+          <TextBlock Text="Ratio" MinWidth="40" />
+          <Slider Minimum="1" Maximum="20" Width="120" Value="{Binding CompRatio}" />
+          <TextBlock Text="{Binding CompRatio, StringFormat='{0:0.0}:1'}" MinWidth="50" /></StackPanel>
+      </StackPanel>
+    </DataTemplate>
+  </Window.DataTemplates>
+
+  <DockPanel Margin="16">
+    <!-- En-tête -->
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,10">
+      <Image Source="avares://FrameCastStudio/Assets/logo.png" Width="44" Height="44" Margin="0,0,12,0" />
+      <StackPanel Grid.Column="1" VerticalAlignment="Center">
+        <TextBlock Text="FrameCast Studio" FontSize="20" FontWeight="Bold" />
+        <TextBlock Classes="hint" Text="{Binding CurrentVersion, StringFormat='Version {0} pour Linux'}" />
+      </StackPanel>
+      <TextBlock Grid.Column="2" Text="{Binding Status}" FontSize="15" VerticalAlignment="Center" />
+    </Grid>
+
+    <TabControl>
+      <!-- ============================ STUDIO ============================ -->
+      <TabItem Header="Studio">
+        <ScrollViewer><StackPanel Margin="0,10,0,0">
+          <Border Classes="card"><StackPanel Spacing="10">
+            <WrapPanel>
+              <Button Classes="rec" Content="●  Enregistrer" Command="{Binding StartRecordCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,8,8" />
+              <Button Classes="live" Content="📡  Passer en direct" Command="{Binding StartLiveCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,8,8" />
+              <Button Classes="big" Content="⏪  Buffer de replay seul" Command="{Binding StartReplayCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,8,8" />
+              <Button Classes="big" Content="■  Arrêter" Command="{Binding StopCommand}" IsEnabled="{Binding IsRunning}" Margin="0,0,8,8" />
+              <Button Classes="big" Content="💾  Sauver le replay" Command="{Binding SaveReplayCommand}" IsEnabled="{Binding CanSaveReplay}" Margin="0,0,8,8" />
+              <Button Classes="big" Content="📷  Capture d'écran" Command="{Binding ScreenshotCommand}" Margin="0,0,8,8" />
+            </WrapPanel>
+            <TextBlock Text="{Binding ErrorDetail}" Foreground="#ff6b6b" TextWrapping="Wrap"
+                       IsVisible="{Binding ErrorDetail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <Grid ColumnDefinitions="*,*,*,*,*,*">
+              <StackPanel><TextBlock Classes="hint" Text="Durée" /><TextBlock FontSize="18" Text="{Binding StatElapsed}" /></StackPanel>
+              <StackPanel Grid.Column="1"><TextBlock Classes="hint" Text="Images/s" /><TextBlock FontSize="18" Text="{Binding StatFps}" /></StackPanel>
+              <StackPanel Grid.Column="2"><TextBlock Classes="hint" Text="Débit" /><TextBlock FontSize="18" Text="{Binding StatBitrate}" /></StackPanel>
+              <StackPanel Grid.Column="3"><TextBlock Classes="hint" Text="Taille" /><TextBlock FontSize="18" Text="{Binding StatSize}" /></StackPanel>
+              <StackPanel Grid.Column="4"><TextBlock Classes="hint" Text="Images perdues" /><TextBlock FontSize="18" Text="{Binding StatDropped}" /></StackPanel>
+              <StackPanel Grid.Column="5"><TextBlock Classes="hint" Text="Vitesse" /><TextBlock FontSize="18" Text="{Binding StatSpeed}" /></StackPanel>
+            </Grid>
+          </StackPanel></Border>
+
+          <Border Classes="card"><StackPanel Spacing="4">
+            <TextBlock Text="Encodeur" Classes="h" Margin="0,0,0,2" />
+            <TextBlock Text="{Binding EncoderInfo}" />
+            <TextBlock Classes="hint" Text="{Binding EnvironmentInfo}" />
+            <StackPanel Classes="row" Margin="0,8,0,0">
+              <Button Content="Ouvrir le dossier des vidéos" Command="{Binding OpenOutputCommand}" />
+            </StackPanel>
+          </StackPanel></Border>
+
+          <Border Classes="card"><StackPanel>
+            <TextBlock Text="Journal" Classes="h" Margin="0,0,0,4" />
+            <TextBox Text="{Binding LogText}" IsReadOnly="True" AcceptsReturn="True" Height="230"
+                     FontFamily="monospace" FontSize="11" TextWrapping="NoWrap" />
+          </StackPanel></Border>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+
+      <!-- ============================ VIDÉO ============================ -->
+      <TabItem Header="Vidéo">
+        <ScrollViewer><StackPanel Margin="0,10,0,0">
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Capture" Margin="0,0,0,4" />
+            <StackPanel Classes="row"><TextBlock Text="Images par seconde" />
+              <ComboBox ItemsSource="{Binding FpsChoices}" SelectedItem="{Binding Fps}" Width="120" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Échelle de sortie (%)" />
+              <ComboBox ItemsSource="{Binding ScaleChoices}" SelectedItem="{Binding ScalePercent}" Width="120" /></StackPanel>
+            <CheckBox Content="Capturer le curseur de la souris" IsChecked="{Binding CaptureCursor}" />
+            <CheckBox Content="Recadrer une région" IsChecked="{Binding CropEnabled}" Margin="0,6,0,0" />
+            <StackPanel Classes="row" IsVisible="{Binding CropEnabled}">
+              <TextBlock Text="X / Y" MinWidth="60" />
+              <NumericUpDown Value="{Binding CropX}" Minimum="0" Maximum="16000" Width="130" FormatString="0" />
+              <NumericUpDown Value="{Binding CropY}" Minimum="0" Maximum="16000" Width="130" FormatString="0" />
+              <TextBlock Text="Largeur / Hauteur" MinWidth="120" />
+              <NumericUpDown Value="{Binding CropW}" Minimum="16" Maximum="16000" Width="130" FormatString="0" />
+              <NumericUpDown Value="{Binding CropH}" Minimum="16" Maximum="16000" Width="130" FormatString="0" />
+            </StackPanel>
+          </StackPanel></Border>
+
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Encodage" Margin="0,0,0,4" />
+            <StackPanel Classes="row"><TextBlock Text="Codec" />
+              <ComboBox ItemsSource="{Binding Codecs}" SelectedItem="{Binding Codec}" Width="140" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Encodeur" />
+              <ComboBox ItemsSource="{Binding EncoderModes}" SelectedItem="{Binding EncoderMode}" Width="140" />
+              <TextBlock Classes="hint" Text="Auto = GPU si possible (NVENC/VAAPI), sinon processeur" MinWidth="0" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Contrôle du débit" />
+              <ComboBox ItemsSource="{Binding RateModes}" SelectedItem="{Binding RateMode}" Width="140" />
+              <TextBlock Classes="hint" Text="CBR constant · VBR variable · CQP qualité constante" MinWidth="0" /></StackPanel>
+            <StackPanel Classes="row" IsVisible="{Binding ShowBitrate}"><TextBlock Text="Débit vidéo (kbps)" />
+              <NumericUpDown Value="{Binding BitrateKbps}" Minimum="500" Maximum="100000" Increment="500" Width="160" FormatString="0" /></StackPanel>
+            <StackPanel Classes="row" IsVisible="{Binding ShowQp}"><TextBlock Text="Qualité (QP / CRF)" />
+              <Slider Minimum="10" Maximum="40" Width="260" IsSnapToTickEnabled="True" TickFrequency="1" Value="{Binding Qp}" />
+              <TextBlock Text="{Binding Qp, StringFormat='{0:0}'}" MinWidth="30" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Image clé toutes les (s)" />
+              <ComboBox ItemsSource="{Binding GopChoices}" SelectedItem="{Binding GopSeconds}" Width="100" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Espace colorimétrique" />
+              <ComboBox ItemsSource="{Binding ColorSpaces}" SelectedItem="{Binding ColorSpace}" Width="140" /></StackPanel>
+            <CheckBox Content="Images B (meilleure compression, un peu plus de latence)" IsChecked="{Binding BFramesEnabled}" />
+            <CheckBox Content="Faible latence (x264/x265 : tune zerolatency, NVENC : preset ll)" IsChecked="{Binding LowLatency}" />
+            <CheckBox Content="Tampon VBV strict (VBR)" IsChecked="{Binding EnableVbvBuffer}" />
+          </StackPanel></Border>
+
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Fichiers" Margin="0,0,0,4" />
+            <StackPanel Classes="row"><TextBlock Text="Dossier des vidéos" />
+              <TextBox Text="{Binding OutputFolder}" Width="420" />
+              <Button Content="Parcourir…" Command="{Binding BrowseOutputCommand}" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Dossier des captures" />
+              <TextBox Text="{Binding ScreenshotFolder}" Width="420" />
+              <Button Content="Parcourir…" Command="{Binding BrowseScreenshotsCommand}" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Format vidéo" />
+              <ComboBox ItemsSource="{Binding Containers}" SelectedItem="{Binding OutputFormat}" Width="120" />
+              <TextBlock Classes="hint" Text="MKV résiste mieux aux plantages" MinWidth="0" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Préfixe du nom" />
+              <TextBox Text="{Binding FilenamePrefixRec}" Width="200" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Format des captures" />
+              <ComboBox ItemsSource="{Binding ScreenshotFormats}" SelectedItem="{Binding ScreenshotFormat}" Width="120" /></StackPanel>
+            <CheckBox Content="Ajouter la date et l'heure au nom" IsChecked="{Binding UseTimestampInFilename}" />
+            <CheckBox Content="MP4 fragmenté (le fichier reste lisible en cas de plantage)" IsChecked="{Binding FragmentedMp4}" />
+            <CheckBox Content="Ouvrir le dossier à la fin de l'enregistrement" IsChecked="{Binding OpenFolderAfterRec}" />
+            <CheckBox Content="Copier les captures dans le presse-papiers (wl-copy ou xclip requis)" IsChecked="{Binding CopyScreenshotToClipboard}" />
+            <CheckBox Content="Découper les fichiers" IsChecked="{Binding SplitFileEnabled}" Margin="0,6,0,0" />
+            <StackPanel Classes="row" IsVisible="{Binding SplitFileEnabled}"><TextBlock Text="Taille approximative (Go)" />
+              <NumericUpDown Value="{Binding SplitFileSizeGb}" Minimum="0.5" Maximum="64" Increment="0.5" Width="140" FormatString="0.0" />
+              <TextBlock Classes="hint" Text="Estimée d'après le débit (inactif en CQP)" MinWidth="0" /></StackPanel>
+          </StackPanel></Border>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+
+      <!-- ============================ AUDIO ============================ -->
+      <TabItem Header="Audio">
+        <ScrollViewer><StackPanel Margin="0,10,0,0">
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Sources" Margin="0,0,0,4" />
+            <CheckBox Content="Son du système (ce que tu entends)" IsChecked="{Binding AudioLoopback}" />
+            <StackPanel Classes="row"><TextBlock Text="Sortie à capturer" />
+              <ComboBox ItemsSource="{Binding LoopbackDevices}" SelectedValueBinding="{Binding Id}" SelectedValue="{Binding LoopbackDeviceId}" Width="460" /></StackPanel>
+            <CheckBox Content="Microphone" IsChecked="{Binding AudioMic}" Margin="0,6,0,0" />
+            <StackPanel Classes="row"><TextBlock Text="Micro" />
+              <ComboBox ItemsSource="{Binding MicDevices}" SelectedValueBinding="{Binding Id}" SelectedValue="{Binding MicDeviceId}" Width="460" />
+              <Button Content="Actualiser" Command="{Binding RefreshDevicesCommand}" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Débit audio (kbps)" />
+              <ComboBox ItemsSource="{Binding AudioBitrates}" SelectedItem="{Binding AudioBitrateKbps}" Width="120" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Fréquence (Hz)" />
+              <ComboBox ItemsSource="{Binding SampleRates}" SelectedItem="{Binding AudioSampleRate}" Width="120" /></StackPanel>
+          </StackPanel></Border>
+
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Voie « Son du système »" Margin="0,0,0,4" />
+            <ContentControl Content="{Binding Loop}" />
+          </StackPanel></Border>
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Voie « Microphone »" Margin="0,0,0,4" />
+            <ContentControl Content="{Binding Mic}" />
+          </StackPanel></Border>
+
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Master" Margin="0,0,0,4" />
+            <StackPanel Classes="row"><TextBlock Text="Gain master (dB)" />
+              <Slider Minimum="-30" Maximum="20" Width="260" Value="{Binding MasterGainDb}" />
+              <TextBlock Text="{Binding MasterGainDb, StringFormat='{0:0.0}'}" MinWidth="40" />
+              <CheckBox Content="Muet" IsChecked="{Binding MasterMute}" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Limiteur" />
+              <CheckBox Content="Activé" IsChecked="{Binding LimiterOn}" />
+              <Slider Minimum="-12" Maximum="0" Width="200" Value="{Binding LimiterCeilingDb}" />
+              <TextBlock Text="{Binding LimiterCeilingDb, StringFormat='{0:0.0} dB'}" MinWidth="60" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Ducking (le micro baisse le système)" />
+              <CheckBox Content="Activé" IsChecked="{Binding DuckingOn}" /></StackPanel>
+            <StackPanel Classes="row" IsVisible="{Binding DuckingOn}"><TextBlock Text="Seuil micro (dB)" />
+              <Slider Minimum="-60" Maximum="-10" Width="200" Value="{Binding DuckThresholdDb}" />
+              <TextBlock Text="Réduction (dB)" MinWidth="100" />
+              <Slider Minimum="3" Maximum="30" Width="160" Value="{Binding DuckAmountDb}" /></StackPanel>
+          </StackPanel></Border>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+
+      <!-- ============================ DIRECT ============================ -->
+      <TabItem Header="Direct">
+        <ScrollViewer><StackPanel Margin="0,10,0,0">
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Diffusion RTMP" Margin="0,0,0,4" />
+            <StackPanel Classes="row"><TextBlock Text="Service" />
+              <ComboBox ItemsSource="{Binding StreamServices}" SelectedItem="{Binding SelectedService}" Width="200" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="URL d'ingest" />
+              <TextBox Text="{Binding IngestUrl}" Width="500" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Text="Clé de stream" />
+              <TextBox Text="{Binding StreamKey}" PasswordChar="●" Width="500" /></StackPanel>
+            <CheckBox Content="Enregistrer aussi un fichier pendant le direct" IsChecked="{Binding RecordWhileLive}" Margin="0,6,0,0" />
+            <TextBlock Classes="hint" Margin="0,8,0,0" TextWrapping="Wrap"
+                       Text="Le débit est forcé en CBR pendant un direct. Ne partage jamais ta clé de stream." />
+          </StackPanel></Border>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+
+      <!-- ============================ REPLAY ============================ -->
+      <TabItem Header="Replay">
+        <ScrollViewer><StackPanel Margin="0,10,0,0">
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Buffer de replay" Margin="0,0,0,4" />
+            <CheckBox Content="Garder un buffer pendant les enregistrements et directs" IsChecked="{Binding ReplayEnabled}" />
+            <StackPanel Classes="row"><TextBlock Text="Durée conservée (s)" />
+              <ComboBox ItemsSource="{Binding ReplayChoices}" SelectedItem="{Binding ReplaySeconds}" Width="120" /></StackPanel>
+            <TextBlock Classes="hint" Margin="0,8,0,0" TextWrapping="Wrap"
+                       Text="Le buffer est stocké en segments de 2 s dans le dossier temporaire. « Sauver le replay » (ou la commande --save-replay) assemble les dernières secondes dans un MP4 sans ré-encodage. Le bouton « Buffer de replay seul » active le buffer sans enregistrer de fichier." />
+          </StackPanel></Border>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+
+      <!-- ============================ PROFILS ============================ -->
+      <TabItem Header="Profils">
+        <ScrollViewer><StackPanel Margin="0,10,0,0">
+          <Border Classes="card"><StackPanel Spacing="8">
+            <TextBlock Classes="h" Text="Profils de réglages" Margin="0,0,0,4" />
+            <ListBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" Height="200" />
+            <TextBlock Classes="hint" Text="{Binding SelectedProfile.Description}" />
+            <StackPanel Classes="row">
+              <Button Content="Appliquer" Command="{Binding ApplyProfileCommand}" />
+              <Button Content="Supprimer" Command="{Binding DeleteProfileCommand}" />
+            </StackPanel>
+            <StackPanel Classes="row">
+              <TextBox Text="{Binding NewProfileName}" Watermark="Nom du nouveau profil" Width="260" />
+              <Button Content="Enregistrer les réglages actuels" Command="{Binding SaveProfileCommand}" />
+            </StackPanel>
+          </StackPanel></Border>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+
+      <!-- ============================ RÉGLAGES ============================ -->
+      <TabItem Header="Réglages">
+        <ScrollViewer><StackPanel Margin="0,10,0,0">
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Capture d'écran" Margin="0,0,0,4" />
+            <StackPanel Classes="row"><TextBlock Text="Méthode" />
+              <ComboBox ItemsSource="{Binding Backends}" SelectedItem="{Binding CaptureBackend}" Width="140" /></StackPanel>
+            <TextBlock Classes="hint" TextWrapping="Wrap"
+                       Text="Auto : Portail (xdg-desktop-portal + PipeWire) sous Wayland, x11grab sous X11. Le portail affiche une fenêtre de sélection d'écran la première fois ; ce choix est ensuite mémorisé. Le mode Portail nécessite GStreamer avec le plugin PipeWire (gstreamer1.0-pipewire / pipewire-gstreamer / gst-plugin-pipewire)." />
+          </StackPanel></Border>
+
+          <Border Classes="card"><StackPanel>
+            <TextBlock Classes="h" Text="Raccourcis" Margin="0,0,0,4" />
+            <TextBox Text="{Binding CliHelp, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" FontFamily="monospace" FontSize="12" />
+          </StackPanel></Border>
+
+          <Border Classes="card"><StackPanel Spacing="6">
+            <TextBlock Classes="h" Text="Mises à jour" Margin="0,0,0,4" />
+            <CheckBox Content="Vérifier au démarrage" IsChecked="{Binding AutoCheckUpdates}" />
+            <TextBlock Text="{Binding UpdateStatus}" />
+            <ProgressBar Minimum="0" Maximum="100" Value="{Binding UpdateProgress}" IsVisible="{Binding UpdateBusy}" />
+            <StackPanel Classes="row">
+              <Button Content="Vérifier maintenant" Command="{Binding CheckUpdatesCommand}" IsEnabled="{Binding !UpdateBusy}" />
+              <Button Content="Installer / télécharger" Command="{Binding InstallUpdateCommand}" IsVisible="{Binding UpdateAvailable}" IsEnabled="{Binding !UpdateBusy}" />
+            </StackPanel>
+            <TextBlock Classes="hint" Text="{Binding UpdateNotes}" IsVisible="{Binding UpdateAvailable}" />
+          </StackPanel></Border>
+
+          <Border Classes="card"><StackPanel Spacing="6">
+            <TextBlock Classes="h" Text="Diagnostic" Margin="0,0,0,4" />
+            <TextBlock Classes="hint" Text="{Binding EnvironmentInfo}" />
+            <Button Content="Ouvrir le dossier des logs" Command="{Binding OpenLogsCommand}" HorizontalAlignment="Left" />
+          </StackPanel></Border>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
+</Window>

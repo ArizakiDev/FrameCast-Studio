@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=FrameCast Studio
+GenericName=Enregistrement et streaming
+Comment=Capture d'écran, enregistrement, replay et direct
+Exec=FrameCastStudio
+Icon=framecaststudio
+Terminal=false
+Categories=AudioVideo;Video;Recorder;
+Keywords=screen;record;stream;obs;capture;
+StartupWMClass=FrameCastStudio
